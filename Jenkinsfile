@@ -15,19 +15,19 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                sh './gradlew test'
+                bat './gradlew test'
             }
         }
 
         stage('Run Instrumentation Tests') {
             steps {
-                sh './gradlew connectedAndroidTest'
+                bat './gradlew connectedAndroidTest'
             }
         }
 
         stage('Build APK') {
             steps {
-                sh './gradlew assembleDebug'
+                bat './gradlew assembleDebug'
             }
         }
     }
