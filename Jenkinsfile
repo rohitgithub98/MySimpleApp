@@ -15,24 +15,26 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                bat './gradlew testDebugUnitTest'
+                bat './gradlew testDebugUnitTest --rerun-tasks'  // 🔥 Force test re-run
+                sleep time: 5, unit: 'SECONDS'  // 🔥 Wait for test reports to generate
             }
             post {
                 always {
-                    // ✅ Ensure test reports are collected
-                    junit 'app/build/test-results/testDebugUnitTest/*.xml'
+                    // ✅ Corrected test report path
+                    junit 'app/build/test-results/testDebugUnitTest/TEST-*.xml'
                 }
             }
         }
 
         stage('Run Instrumentation Tests') {
             steps {
-                bat './gradlew connectedAndroidTest'
+                bat './gradlew connectedAndroidTest --rerun-tasks'  // 🔥 Force test re-run
+                sleep time: 5, unit: 'SECONDS'  // 🔥 Wait for test reports to generate
             }
             post {
                 always {
-                    // ✅ Corrected the path for UI test reports
-                    junit 'app/build/outputs/androidTest-results/connected/*.xml'
+                    // ✅ Corrected test report path
+                    junit 'app/build/outputs/androidTest-results/connected/TEST-*.xml'
                 }
             }
         }
@@ -66,7 +68,7 @@ pipeline {
                             mimeType: 'text/html',
                             recipientProviders: [[$class: 'DevelopersRecipientProvider']],
                             to: "tarakarohit@gmail.com",
-                            attachLog: false // 🔥 Prevents large email sizes
+                            attachLog: false // 🔥 Prevent large email size
                         )
                     } else {
                         echo "⚠ No test results found. Skipping email."
