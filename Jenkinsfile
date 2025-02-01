@@ -19,8 +19,8 @@ pipeline {
             }
             post {
                 always {
-                    // ✅ Corrected path for unit test results
-                    junit 'app/build/test-results/testDebugUnitTest/TEST-*.xml'
+                    // ✅ Ensure test reports are collected
+                    junit 'app/build/test-results/testDebugUnitTest/*.xml'
                 }
             }
         }
@@ -31,8 +31,8 @@ pipeline {
             }
             post {
                 always {
-                    // ✅ Corrected path for UI test results
-                    junit 'app/build/test-results/testReleaseUnitTest/TEST-*.xml'
+                    // ✅ Corrected the path for UI test reports
+                    junit 'app/build/outputs/androidTest-results/connected/*.xml'
                 }
             }
         }
@@ -47,25 +47,30 @@ pipeline {
             steps {
                 script {
                     def testResults = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction)
-                    def total = testResults?.totalCount ?: 0
-                    def failed = testResults?.failCount ?: 0
-                    def passed = total - failed
-                    def reportUrl = "${env.BUILD_URL}testReport"
 
-                    emailext(
-                        subject: "Test Results: ${currentBuild.fullDisplayName}",
-                        body: """
-                        <h3>Jenkins Test Report</h3>
-                        <p><b>Total Tests:</b> ${total}</p>
-                        <p><b>Passed:</b> ${passed}</p>
-                        <p><b>Failed:</b> ${failed}</p>
-                        <p><a href='${reportUrl}'>Click here</a> for full details.</p>
-                        """,
-                        mimeType: 'text/html',
-                        recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                        to: "tarakarohit@gmail.com",
-                        attachLog: true
-                    )
+                    if (testResults) {
+                        def total = testResults.totalCount
+                        def failed = testResults.failCount
+                        def passed = total - failed
+                        def reportUrl = "${env.BUILD_URL}testReport"
+
+                        emailext(
+                            subject: "Test Results: ${currentBuild.fullDisplayName}",
+                            body: """
+                            <h3>Jenkins Test Report</h3>
+                            <p><b>Total Tests:</b> ${total}</p>
+                            <p><b>Passed:</b> ${passed}</p>
+                            <p><b>Failed:</b> ${failed}</p>
+                            <p><a href='${reportUrl}'>Click here</a> for full details.</p>
+                            """,
+                            mimeType: 'text/html',
+                            recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+                            to: "tarakarohit@gmail.com",
+                            attachLog: false // 🔥 Prevents large email sizes
+                        )
+                    } else {
+                        echo "⚠ No test results found. Skipping email."
+                    }
                 }
             }
         }
