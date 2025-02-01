@@ -1,0 +1,47 @@
+# Ignore Android Studio/IntelliJ IDEA project files
+*.iml
+/.idea/
+/.idea/*
+/.idea/caches/
+/.idea/libraries/
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+
+# Ignore local Gradle config
+/local.properties
+/.gradle/
+/.gradle/*
+
+# Ignore Gradle build output
+**/build/
+**/captures/
+**/.cxx/
+**/.externalNativeBuild/
+
+# Ignore NDK related files
+.externalNativeBuild
+.cxx
+
+# Ignore Miscellaneous OS-specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Ignore all APK, AAB, and bundle output
+**/*.apk
+**/*.aab
+**/*.ap_  # Temporary APKs
+
+# Ignore test reports
+**/outputs/
+**/reports/
+**/test-results/
+**/androidTest/
+
+# Ignore dependency caches
+/node_modules/
+/caches/
