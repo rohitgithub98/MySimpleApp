@@ -15,11 +15,11 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                bat './gradlew test'
+                bat './gradlew testDebugUnitTest'
             }
             post {
                 always {
-                    junit 'app/build/test-results/testDebugUnitTest/*.xml'  // Collect test results
+                    junit 'app/build/test-results/testDebugUnitTest/TEST-*.xml'  // ✅ Fixed path
                 }
             }
         }
@@ -30,7 +30,7 @@ pipeline {
             }
             post {
                 always {
-                    junit 'app/build/outputs/androidTest-results/connected/*.xml'  // Collect UI test results
+                    junit 'app/build/outputs/androidTest-results/connected/*.xml' // ✅ Ensure Android test results
                 }
             }
         }
@@ -61,7 +61,7 @@ pipeline {
                         """,
                         mimeType: 'text/html',
                         recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                        to: "tarakarohit@gmail.com", // Change to actual email
+                        to: "your-email@gmail.com",
                         attachLog: true
                     )
                 }
