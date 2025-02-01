@@ -19,7 +19,8 @@ pipeline {
             }
             post {
                 always {
-                    junit 'app/build/test-results/testDebugUnitTest/TEST-*.xml'  // ✅ Fixed path
+                    // ✅ Corrected path for unit test results
+                    junit 'app/build/test-results/testDebugUnitTest/TEST-*.xml'
                 }
             }
         }
@@ -30,7 +31,8 @@ pipeline {
             }
             post {
                 always {
-                    junit 'app/build/outputs/androidTest-results/connected/*.xml' // ✅ Ensure Android test results
+                    // ✅ Corrected path for UI test results
+                    junit 'app/build/test-results/testReleaseUnitTest/TEST-*.xml'
                 }
             }
         }
@@ -61,7 +63,7 @@ pipeline {
                         """,
                         mimeType: 'text/html',
                         recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                        to: "your-email@gmail.com",
+                        to: "tarakarohit@gmail.com",
                         attachLog: true
                     )
                 }
