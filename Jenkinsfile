@@ -32,47 +32,48 @@ pipeline {
             }
         }
 
-                stage('Upload to Microsoft App Center') {
-                    steps {
-                        script {
-                            echo "🚀 Uploading APK to Microsoft App Center..."
+                        stage('Upload to Microsoft App Center') {
+                            steps {
+                                script {
+                                    echo "🚀 Uploading APK to Microsoft App Center..."
 
-                            // Step 1: Get Upload URL
-                            bat """
-                                curl -X POST "https://api.appcenter.ms/v0.1/apps/tarakaro/MySimpleApp/release_uploads" \\
-                                    -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
-                                    -H "Content-Type: application/json" \\
-                                    -d "{}" > upload_response.json
-                            """
+                                    // Step 1: Get Upload URL
+                                    bat """
+                                        curl -X POST "https://api.appcenter.ms/v0.1/apps/tarakaro/MySimpleApp/release_uploads" \\
+                                            -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
+                                            -H "Content-Type: application/json" \\
+                                            -d "{}" > upload_response.json
+                                    """
 
-                            def uploadData = readJSON(file: 'upload_response.json')
+                                    def uploadData = readJSON(file: 'upload_response.json')
 
-                            if (!uploadData.upload_url || !uploadData.upload_id) {
-                                error("❌ Failed to get Upload URL from App Center!")
+                                    if (!uploadData.upload_url || !uploadData.upload_id) {
+                                        error("❌ Failed to get Upload URL from App Center!")
+                                    }
+
+                                    def uploadUrl = uploadData.upload_url
+                                    def uploadId = uploadData.upload_id
+
+                                    // Step 2: Upload APK
+                                    bat """
+                                        curl -F "file=@${APK_PATH}" \\
+                                            -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
+                                            "${uploadUrl}"
+                                    """
+
+                                    // Step 3: Commit the Upload
+                                    bat """
+                                        curl -X PATCH "https://api.appcenter.ms/v0.1/apps/tarakaro/MySimpleApp/release_uploads/${uploadId}" \\
+                                            -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
+                                            -H "Content-Type: application/json" \\
+                                            -d "{\\"status\\":\\"committed\\"}"
+                                    """
+
+                                    echo "✅ APK successfully uploaded to Microsoft App Center!"
+                                }
                             }
-
-                            def uploadUrl = uploadData.upload_url
-                            def uploadId = uploadData.upload_id
-
-                            // Step 2: Upload APK
-                            bat """
-                                curl -F "file=@${APK_PATH}" \\
-                                    -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
-                                    "${uploadUrl}"
-                            """
-
-                            // Step 3: Commit the Upload
-                            bat """
-                                curl -X PATCH "https://api.appcenter.ms/v0.1/apps/tarakaro/MySimpleApp/release_uploads/${uploadId}" \\
-                                    -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
-                                    -H "Content-Type: application/json" \\
-                                    -d "{\\"status\\":\\"committed\\"}"
-                            """
-
-                            echo "✅ APK successfully uploaded to Microsoft App Center!"
                         }
-                    }
-                }
+
 
     }
 
