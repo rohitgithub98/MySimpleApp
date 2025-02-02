@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         APP_CENTER_API_TOKEN = credentials('APP_CENTER_API_TOKEN') // Secure API Token
-        APP_NAME = "TarakaRohit/MySimpleApp"  // Replace with your App Center app name
-        APK_PATH = "app/build/outputs/apk/debug/app-debug.apk" // Path to the generated APK
+        APP_NAME = "users/tarakaro/MySimpleApp"  // 🔥 Correct App Center app name
+        APK_PATH = "app/build/outputs/apk/debug/app-debug.apk" // 🔥 Path to generated APK
     }
 
     stages {
@@ -37,34 +37,33 @@ pipeline {
                 script {
                     echo "🚀 Uploading APK to Microsoft App Center..."
 
-                    def APP_NAME = "MySimpleApp"
-                    def USER_NAME = "users/tarakaro"  // 🔥 Correct user format
+                    // Step 1: Get Upload URL
+                    bat """
+                        curl -X POST "https://api.appcenter.ms/v0.1/apps/${APP_NAME}/release_uploads" \\
+                            -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
+                            -H "Content-Type: application/json" \\
+                            -d "{}" > upload_response.json
+                    """
 
-                    def uploadResponse = bat(
-                        script: """
-                            curl -X POST "https://api.appcenter.ms/v0.1/apps/$USER_NAME/$APP_NAME/release_uploads" \\
-                                -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
-                                -H "Content-Type: application/json" \\
-                                -d "{}" > upload_url.json
-                        """,
-                        returnStatus: true
-                    )
+                    def uploadData = readJSON(file: 'upload_response.json')
 
-                    def uploadUrl = readJSON(file: 'upload_url.json').upload_url
-                    def uploadId = readJSON(file: 'upload_url.json').upload_id
-
-                    if (!uploadUrl) {
+                    if (!uploadData.release_upload_id || !uploadData.upload_url) {
                         error("❌ Failed to get Upload URL from App Center")
                     }
 
+                    def uploadUrl = uploadData.upload_url
+                    def uploadId = uploadData.release_upload_id
+
+                    // Step 2: Upload APK File
                     bat """
-                        curl -F "ipa=@app/build/outputs/apk/debug/app-debug.apk" \\
+                        curl -F "file=@${APK_PATH}" \\
                             -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
                             "${uploadUrl}"
                     """
 
+                    // Step 3: Commit the Upload
                     bat """
-                        curl -X PATCH "https://api.appcenter.ms/v0.1/apps/$USER_NAME/$APP_NAME/release_uploads/$uploadId" \\
+                        curl -X PATCH "https://api.appcenter.ms/v0.1/apps/${APP_NAME}/release_uploads/${uploadId}" \\
                             -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
                             -H "Content-Type: application/json" \\
                             -d "{\\"status\\":\\"committed\\"}"
@@ -74,7 +73,7 @@ pipeline {
                 }
             }
         }
-
+    }
 
     post {
         success {
@@ -86,7 +85,7 @@ pipeline {
                 $Username = "tarakarohit@gmail.com"
                 $Password = "ohsr qmyt wmdx ewhr"  # Use your App Password here
                 $Message = New-Object System.Net.Mail.MailMessage
-                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")  # ✅ Professional-looking "From" name
+                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")
                 $Message.To.Add("tarakarohit@gmail.com")
                 $Message.Subject = "✅ Jenkins Build & Upload Successful"
                 $Message.Body = "All tests passed. APK has been uploaded to Microsoft App Center!"
@@ -108,7 +107,7 @@ pipeline {
                 $Username = "tarakarohit@gmail.com"
                 $Password = "ohsr qmyt wmdx ewhr"  # Use your App Password here
                 $Message = New-Object System.Net.Mail.MailMessage
-                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")  # ✅ Professional-looking "From" name
+                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")
                 $Message.To.Add("tarakarohit@gmail.com")
                 $Message.Subject = "❌ Jenkins Build or Upload Failed"
                 $Message.Body = "Something went wrong. Check Jenkins logs!"
