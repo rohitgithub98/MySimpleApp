@@ -30,25 +30,46 @@ pipeline {
     post {
         success {
             script {
-                emailext(
-                    subject: "✅ Build Successful: ${currentBuild.fullDisplayName}",
-                    body: "All tests passed. Build Successful!",
-                    mimeType: 'text/plain',
-                    to: "tarakarohit@gmail.com"
-                )
+                echo "✅ Build Successful! Sending email via PowerShell..."
+                powershell '''
+                $SMTPServer = "smtp.gmail.com"
+                $SMTPPort = "587"
+                $Username = "tarakarohit@gmail.com"
+                $Password = "ohsr qmyt wmdx ewhr"  # Use your App Password here
+                $Message = New-Object System.Net.Mail.MailMessage
+                $Message.From = $Username
+                $Message.To.Add("tarakarohit@gmail.com")
+                $Message.Subject = "✅ Jenkins Build Successful"
+                $Message.Body = "All tests passed. Build Successful!"
+                $SMTPClient = New-Object System.Net.Mail.SmtpClient($SMTPServer, $SMTPPort)
+                $SMTPClient.EnableSsl = $true
+                $SMTPClient.Credentials = New-Object System.Net.NetworkCredential($Username, $Password)
+                $SMTPClient.Send($Message)
+                '''
             }
-            echo "✅ Build Successful! Email Sent."
+            echo "📧 Email Sent!"
         }
+
         failure {
             script {
-                emailext(
-                    subject: "❌ Build Failed: ${currentBuild.fullDisplayName}",
-                    body: "Tests failed. Build Unsuccessful!",
-                    mimeType: 'text/plain',
-                    to: "tarakarohit@gmail.com"
-                )
+                echo "❌ Build Failed! Sending email via PowerShell..."
+                powershell '''
+                $SMTPServer = "smtp.gmail.com"
+                $SMTPPort = "587"
+                $Username = "tarakarohit@gmail.com"
+                $Password = "ohsr qmyt wmdx ewhr"  # Use your App Password here
+                $Message = New-Object System.Net.Mail.MailMessage
+                $Message.From = $Username
+                $Message.To.Add("tarakarohit@gmail.com")
+                $Message.Subject = "❌ Jenkins Build Failed"
+                $Message.Body = "Tests failed. Build Unsuccessful!"
+                $SMTPClient = New-Object System.Net.Mail.SmtpClient($SMTPServer, $SMTPPort)
+                $SMTPClient.EnableSsl = $true
+                $SMTPClient.Credentials = New-Object System.Net.NetworkCredential($Username, $Password)
+                $SMTPClient.Send($Message)
+                '''
             }
-            echo "❌ Build Failed! Email Sent."
+            echo "📧 Email Sent!"
         }
     }
 }
