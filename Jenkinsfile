@@ -37,7 +37,7 @@ pipeline {
                 $Username = "tarakarohit@gmail.com"
                 $Password = "ohsr qmyt wmdx ewhr"  # Use your App Password here
                 $Message = New-Object System.Net.Mail.MailMessage
-                $Message.From = $Username
+                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")  # ✅ Professional-looking "From" name
                 $Message.To.Add("tarakarohit@gmail.com")
                 $Message.Subject = "✅ Jenkins Build Successful"
                 $Message.Body = "All tests passed. Build Successful!"
@@ -59,7 +59,7 @@ pipeline {
                 $Username = "tarakarohit@gmail.com"
                 $Password = "ohsr qmyt wmdx ewhr"  # Use your App Password here
                 $Message = New-Object System.Net.Mail.MailMessage
-                $Message.From = $Username
+                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")  # ✅ Professional-looking "From" name
                 $Message.To.Add("tarakarohit@gmail.com")
                 $Message.Subject = "❌ Jenkins Build Failed"
                 $Message.Body = "Tests failed. Build Unsuccessful!"
