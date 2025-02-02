@@ -4,6 +4,10 @@ pipeline {
     environment {
         ANDROID_HOME = "C:\\Users\\tarak\\AppData\\Local\\Android\\Sdk"
         GRADLE_OPTS = "-Dorg.gradle.daemon=false"
+        SMTP_SERVER = "smtp.gmail.com"
+        SMTP_PORT = "587"
+        SMTP_USER = "tarakarohit@gmail.com"
+        SMTP_PASSWORD = credentials('SMTP_APP_PASSWORD')  // 🔥 Store App Password securely in Jenkins credentials
     }
 
     stages {
@@ -35,57 +39,37 @@ pipeline {
     post {
         success {
             script {
-                echo "✅ Build Successful! Preparing to send email..."
                 emailext(
                     subject: "✅ Build Successful: ${currentBuild.fullDisplayName}",
-                    body: """
-                    Hello,
-
-                    The Jenkins build for your project **${env.JOB_NAME}** has **passed** successfully! 🎉
-
-                    - **Build Number**: ${env.BUILD_NUMBER}
-                    - **Job Name**: ${env.JOB_NAME}
-                    - **Branch**: ${env.GIT_BRANCH}
-                    - **Build URL**: ${env.BUILD_URL}
-
-                    ✅ All tests passed, and the build is ready for deployment.
-
-                    Regards,
-                    Jenkins
-                    """,
+                    body: "All tests passed. Build Successful!",
                     mimeType: 'text/plain',
                     recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                    to: "tarakarohit@gmail.com"
+                    to: "tarakarohit@gmail.com",
+                    replyTo: "${env.SMTP_USER}",
+                    from: "${env.SMTP_USER}",
+                    smtpServer: "${env.SMTP_SERVER}",
+                    smtpPort: "${env.SMTP_PORT}",
+                    useTLS: true
                 )
-                echo "📧 Email sent successfully!"
             }
+            echo "✅ Build Successful! Email Sent."
         }
         failure {
             script {
-                echo "❌ Build Failed! Preparing to send email..."
                 emailext(
                     subject: "❌ Build Failed: ${currentBuild.fullDisplayName}",
-                    body: """
-                    Hello,
-
-                    The Jenkins build for your project **${env.JOB_NAME}** has **failed** ❌.
-
-                    - **Build Number**: ${env.BUILD_NUMBER}
-                    - **Job Name**: ${env.JOB_NAME}
-                    - **Branch**: ${env.GIT_BRANCH}
-                    - **Build URL**: ${env.BUILD_URL}
-
-                    ❗ Please check the Jenkins logs for details.
-
-                    Regards,
-                    Jenkins
-                    """,
+                    body: "Tests failed. Build Unsuccessful!",
                     mimeType: 'text/plain',
                     recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                    to: "tarakarohit@gmail.com"
+                    to: "tarakarohit@gmail.com",
+                    replyTo: "${env.SMTP_USER}",
+                    from: "${env.SMTP_USER}",
+                    smtpServer: "${env.SMTP_SERVER}",
+                    smtpPort: "${env.SMTP_PORT}",
+                    useTLS: true
                 )
-                echo "📧 Failure email sent successfully!"
             }
+            echo "❌ Build Failed! Email Sent."
         }
     }
 }
