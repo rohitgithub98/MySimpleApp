@@ -25,6 +25,13 @@ pipeline {
                 bat './gradlew assembleDebug --no-daemon'
             }
         }
+
+        // ✅ Archive APK so it can be used by other jobs
+        stage('Archive APK') {
+             steps {
+                archiveArtifacts artifacts: 'app/build/outputs/apk/debug/app-debug.apk', fingerprint: true
+             }
+        }
     }
 
     post {
