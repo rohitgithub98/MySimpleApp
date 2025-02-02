@@ -1,15 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        ANDROID_HOME = "C:\\Users\\tarak\\AppData\\Local\\Android\\Sdk"
-        GRADLE_OPTS = "-Dorg.gradle.daemon=false"
-        SMTP_SERVER = "smtp.gmail.com"
-        SMTP_PORT = "587"
-        SMTP_USER = "tarakarohit@gmail.com"
-        SMTP_PASSWORD = credentials('SMTP_APP_PASSWORD')  // 🔥 Store App Password securely in Jenkins credentials
-    }
-
     stages {
         stage('Checkout Code') {
             steps {
@@ -43,13 +34,7 @@ pipeline {
                     subject: "✅ Build Successful: ${currentBuild.fullDisplayName}",
                     body: "All tests passed. Build Successful!",
                     mimeType: 'text/plain',
-                    recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                    to: "tarakarohit@gmail.com",
-                    replyTo: "${env.SMTP_USER}",
-                    from: "${env.SMTP_USER}",
-                    smtpServer: "${env.SMTP_SERVER}",
-                    smtpPort: "${env.SMTP_PORT}",
-                    useTLS: true
+                    to: "tarakarohit@gmail.com"
                 )
             }
             echo "✅ Build Successful! Email Sent."
@@ -60,13 +45,7 @@ pipeline {
                     subject: "❌ Build Failed: ${currentBuild.fullDisplayName}",
                     body: "Tests failed. Build Unsuccessful!",
                     mimeType: 'text/plain',
-                    recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                    to: "tarakarohit@gmail.com",
-                    replyTo: "${env.SMTP_USER}",
-                    from: "${env.SMTP_USER}",
-                    smtpServer: "${env.SMTP_SERVER}",
-                    smtpPort: "${env.SMTP_PORT}",
-                    useTLS: true
+                    to: "tarakarohit@gmail.com"
                 )
             }
             echo "❌ Build Failed! Email Sent."
