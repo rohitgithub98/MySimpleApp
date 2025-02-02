@@ -16,24 +16,24 @@ pipeline {
         stage('Run Unit Tests') {
             steps {
                 bat './gradlew testDebugUnitTest'
+                bat 'dir app/build/test-results/testDebugUnitTest'  // ✅ Log if reports exist
             }
             post {
                 always {
-                    // ✅ Corrected test report path
-                    junit 'app/build/test-results/testDebugUnitTest/*.xml'
+                    junit 'app/build/test-results/testDebugUnitTest/*.xml' // ✅ Corrected path
                 }
             }
         }
 
         stage('Run Instrumentation Tests') {
             steps {
-                bat './gradlew connectedAndroidTest --rerun-tasks'  // 🔥 Force test re-run
-                sleep time: 5, unit: 'SECONDS'  // 🔥 Wait for test reports to generate
+                bat './gradlew connectedAndroidTest --rerun-tasks --info --debug' // 🔥 More logs
+                sleep time: 5, unit: 'SECONDS' // 🔥 Allow time for reports
+                bat 'dir app/build/outputs/androidTest-results/connected' // ✅ Log if reports exist
             }
             post {
                 always {
-                    // ✅ Corrected test report path
-                    junit 'app/build/outputs/androidTest-results/connected/*.xml'
+                    junit 'app/build/outputs/androidTest-results/connected/*.xml' // ✅ Corrected path
                 }
             }
         }
@@ -47,8 +47,7 @@ pipeline {
         stage('Send Test Report Email') {
             steps {
                 script {
-                    def testResults = manager.build.getAction(hudson.tasks.junit.TestResultAction)
-
+                    def testResults = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction)
                     if (testResults) {
                         def total = testResults.totalCount
                         def failed = testResults.failCount
@@ -67,7 +66,7 @@ pipeline {
                             mimeType: 'text/html',
                             recipientProviders: [[$class: 'DevelopersRecipientProvider']],
                             to: "tarakarohit@gmail.com",
-                            attachLog: false // 🔥 Prevent large email size
+                            attachLog: false
                         )
                     } else {
                         echo "⚠ No test results found. Skipping email."
