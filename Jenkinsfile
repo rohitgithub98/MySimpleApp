@@ -15,32 +15,39 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                bat './gradlew testDebugUnitTest'
-                bat 'dir /s "app\\build\\test-results"' // ✅ Debugging: List all report files
+                bat './gradlew testDebugUnitTest --no-daemon'
+                bat 'dir /s "app\\build\\test-results"' // ✅ Debugging: Show test files
             }
             post {
                 always {
-                    junit 'app/build/test-results/testDebugUnitTest/*.xml' // ✅ Corrected path
+                    junit 'app/build/test-results/testDebugUnitTest/TEST-*.xml' // ✅ Fixed test report path
                 }
             }
         }
 
         stage('Run Instrumentation Tests') {
             steps {
-                bat './gradlew connectedAndroidTest --rerun-tasks --info --debug'
+                bat './gradlew connectedAndroidTest --no-window-animation --rerun-tasks --no-daemon --info --debug'
                 sleep time: 5, unit: 'SECONDS'
-                bat 'dir /s "app\\build\\outputs\\androidTest-results"' // ✅ Debugging: List all report files
+                bat 'dir /s "app\\build\\outputs\\androidTest-results"' // ✅ Debugging
             }
             post {
                 always {
-                    junit 'app/build/outputs/androidTest-results/connected/*.xml' // ✅ Corrected path
+                    script {
+                        def testReportPath = 'app/build/outputs/androidTest-results'
+                        if (fileExists(testReportPath)) {
+                            junit "${testReportPath}/**/TEST-*.xml" // ✅ Scan all subdirectories
+                        } else {
+                            echo "⚠ No test results found in ${testReportPath}. Skipping."
+                        }
+                    }
                 }
             }
         }
 
         stage('Build APK') {
             steps {
-                bat './gradlew assembleDebug'
+                bat './gradlew assembleDebug --no-daemon'
             }
         }
 
@@ -48,7 +55,7 @@ pipeline {
             steps {
                 script {
                     def testResults = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction)
-                    if (testResults && testResults.totalCount > 0) {  // ✅ Ensure results exist
+                    if (testResults && testResults.totalCount > 0) {  // ✅ Ensure results exist before sending email
                         emailext(
                             subject: "Test Results: ${currentBuild.fullDisplayName}",
                             body: """
