@@ -15,13 +15,12 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                bat './gradlew testDebugUnitTest --rerun-tasks'  // 🔥 Force test re-run
-                sleep time: 5, unit: 'SECONDS'  // 🔥 Wait for test reports to generate
+                bat './gradlew testDebugUnitTest'
             }
             post {
                 always {
                     // ✅ Corrected test report path
-                    junit 'app/build/test-results/testDebugUnitTest/TEST-*.xml'
+                    junit 'app/build/test-results/testDebugUnitTest/*.xml'
                 }
             }
         }
@@ -34,7 +33,7 @@ pipeline {
             post {
                 always {
                     // ✅ Corrected test report path
-                    junit 'app/build/outputs/androidTest-results/connected/TEST-*.xml'
+                    junit 'app/build/outputs/androidTest-results/connected/*.xml'
                 }
             }
         }
@@ -48,7 +47,7 @@ pipeline {
         stage('Send Test Report Email') {
             steps {
                 script {
-                    def testResults = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction)
+                    def testResults = manager.build.getAction(hudson.tasks.junit.TestResultAction)
 
                     if (testResults) {
                         def total = testResults.totalCount
