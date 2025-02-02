@@ -36,21 +36,45 @@ pipeline {
             steps {
                 script {
                     echo "🚀 Uploading APK to Microsoft App Center..."
-                    bat """
-                    curl -X POST "https://api.appcenter.ms/v0.1/apps/${APP_NAME}/release_uploads" ^
-                         -H "X-API-Token: ${APP_CENTER_API_TOKEN}" ^
-                         -H "Content-Type: application/json" ^
-                         -d "{}" > upload_url.json
 
-                    for /F "tokens=2 delims=:, " %%a in ('findstr \"upload_url\" upload_url.json') do set UPLOAD_URL=%%a
-                    curl -F "ipa=@app/build/outputs/apk/debug/app-debug.apk" ^
-                         -H "X-API-Token: ${APP_CENTER_API_TOKEN}" ^
-                         "%UPLOAD_URL%"
+                    def APP_NAME = "MySimpleApp"
+                    def USER_NAME = "users/tarakaro"  // 🔥 Correct user format
+
+                    def uploadResponse = bat(
+                        script: """
+                            curl -X POST "https://api.appcenter.ms/v0.1/apps/$USER_NAME/$APP_NAME/release_uploads" \\
+                                -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
+                                -H "Content-Type: application/json" \\
+                                -d "{}" > upload_url.json
+                        """,
+                        returnStatus: true
+                    )
+
+                    def uploadUrl = readJSON(file: 'upload_url.json').upload_url
+                    def uploadId = readJSON(file: 'upload_url.json').upload_id
+
+                    if (!uploadUrl) {
+                        error("❌ Failed to get Upload URL from App Center")
+                    }
+
+                    bat """
+                        curl -F "ipa=@app/build/outputs/apk/debug/app-debug.apk" \\
+                            -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
+                            "${uploadUrl}"
                     """
+
+                    bat """
+                        curl -X PATCH "https://api.appcenter.ms/v0.1/apps/$USER_NAME/$APP_NAME/release_uploads/$uploadId" \\
+                            -H "X-API-Token: ${APP_CENTER_API_TOKEN}" \\
+                            -H "Content-Type: application/json" \\
+                            -d "{\\"status\\":\\"committed\\"}"
+                    """
+
+                    echo "✅ APK successfully uploaded to Microsoft App Center!"
                 }
             }
         }
-    }
+
 
     post {
         success {
