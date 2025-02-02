@@ -35,25 +35,57 @@ pipeline {
     post {
         success {
             script {
+                echo "✅ Build Successful! Preparing to send email..."
                 emailext(
                     subject: "✅ Build Successful: ${currentBuild.fullDisplayName}",
-                    body: "All tests passed. Build Successful!",
+                    body: """
+                    Hello,
+
+                    The Jenkins build for your project **${env.JOB_NAME}** has **passed** successfully! 🎉
+
+                    - **Build Number**: ${env.BUILD_NUMBER}
+                    - **Job Name**: ${env.JOB_NAME}
+                    - **Branch**: ${env.GIT_BRANCH}
+                    - **Build URL**: ${env.BUILD_URL}
+
+                    ✅ All tests passed, and the build is ready for deployment.
+
+                    Regards,
+                    Jenkins
+                    """,
                     mimeType: 'text/plain',
+                    recipientProviders: [[$class: 'DevelopersRecipientProvider']],
                     to: "tarakarohit@gmail.com"
                 )
+                echo "📧 Email sent successfully!"
             }
-            echo "✅ Build Successful!"
         }
         failure {
             script {
+                echo "❌ Build Failed! Preparing to send email..."
                 emailext(
                     subject: "❌ Build Failed: ${currentBuild.fullDisplayName}",
-                    body: "Tests failed. Build Unsuccessful!",
+                    body: """
+                    Hello,
+
+                    The Jenkins build for your project **${env.JOB_NAME}** has **failed** ❌.
+
+                    - **Build Number**: ${env.BUILD_NUMBER}
+                    - **Job Name**: ${env.JOB_NAME}
+                    - **Branch**: ${env.GIT_BRANCH}
+                    - **Build URL**: ${env.BUILD_URL}
+
+                    ❗ Please check the Jenkins logs for details.
+
+                    Regards,
+                    Jenkins
+                    """,
                     mimeType: 'text/plain',
+                    recipientProviders: [[$class: 'DevelopersRecipientProvider']],
                     to: "tarakarohit@gmail.com"
                 )
+                echo "📧 Failure email sent successfully!"
             }
-            echo "❌ Build Failed!"
         }
     }
 }
