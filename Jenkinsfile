@@ -16,7 +16,7 @@ pipeline {
         stage('Run Unit Tests') {
             steps {
                 bat './gradlew testDebugUnitTest'
-                bat 'dir app/build/test-results/testDebugUnitTest'  // ✅ Log if reports exist
+                bat 'dir /s "app\\build\\test-results"' // ✅ Debugging: List all report files
             }
             post {
                 always {
@@ -27,9 +27,9 @@ pipeline {
 
         stage('Run Instrumentation Tests') {
             steps {
-                bat './gradlew connectedAndroidTest --rerun-tasks --info --debug' // 🔥 More logs
-                sleep time: 5, unit: 'SECONDS' // 🔥 Allow time for reports
-                bat 'dir app/build/outputs/androidTest-results/connected' // ✅ Log if reports exist
+                bat './gradlew connectedAndroidTest --rerun-tasks --info --debug'
+                sleep time: 5, unit: 'SECONDS'
+                bat 'dir /s "app\\build\\outputs\\androidTest-results"' // ✅ Debugging: List all report files
             }
             post {
                 always {
@@ -48,25 +48,19 @@ pipeline {
             steps {
                 script {
                     def testResults = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction)
-                    if (testResults) {
-                        def total = testResults.totalCount
-                        def failed = testResults.failCount
-                        def passed = total - failed
-                        def reportUrl = "${env.BUILD_URL}testReport"
-
+                    if (testResults && testResults.totalCount > 0) {  // ✅ Ensure results exist
                         emailext(
                             subject: "Test Results: ${currentBuild.fullDisplayName}",
                             body: """
                             <h3>Jenkins Test Report</h3>
-                            <p><b>Total Tests:</b> ${total}</p>
-                            <p><b>Passed:</b> ${passed}</p>
-                            <p><b>Failed:</b> ${failed}</p>
-                            <p><a href='${reportUrl}'>Click here</a> for full details.</p>
+                            <p><b>Total Tests:</b> ${testResults.totalCount}</p>
+                            <p><b>Passed:</b> ${testResults.totalCount - testResults.failCount}</p>
+                            <p><b>Failed:</b> ${testResults.failCount}</p>
+                            <p><a href='${env.BUILD_URL}testReport'>Click here</a> for full details.</p>
                             """,
                             mimeType: 'text/html',
                             recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                            to: "tarakarohit@gmail.com",
-                            attachLog: false
+                            to: "tarakarohit@gmail.com"
                         )
                     } else {
                         echo "⚠ No test results found. Skipping email."
