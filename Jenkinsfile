@@ -42,10 +42,10 @@ pipeline {
                          -H "Content-Type: application/json" ^
                          -d "{}" > upload_url.json
 
-                    for /f "tokens=2 delims=: " %%a in ('findstr id upload_url.json') do set UPLOAD_ID=%%a
-                    curl -F "ipa=@${APK_PATH}" ^
+                    for /F "tokens=2 delims=:, " %%a in ('findstr \"upload_url\" upload_url.json') do set UPLOAD_URL=%%a
+                    curl -F "ipa=@app/build/outputs/apk/debug/app-debug.apk" ^
                          -H "X-API-Token: ${APP_CENTER_API_TOKEN}" ^
-                         "https://file.appcenter.ms/upload/%UPLOAD_ID%"
+                         "%UPLOAD_URL%"
                     """
                 }
             }
