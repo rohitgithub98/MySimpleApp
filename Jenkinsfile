@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        SONAR_SCANNER = tool name: 'SonarQube Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+    }
+
     stages {
         stage('Checkout Code') {
             steps {
@@ -26,7 +30,21 @@ pipeline {
             }
         }
 
-        // ✅ Archive APK so it can be used by other jobs
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    bat '''
+                    "%SONAR_SCANNER%/bin/sonar-scanner" ^
+                    -D"sonar.projectKey=MySimpleApp" ^
+                    -D"sonar.sources=app/src" ^
+                    -D"sonar.host.url=http://localhost:9000" ^
+                    -D"sonar.login=${SONAR_TOKEN}"
+                    '''
+                }
+            }
+        }
+
+        // ✅ Archive APK for other jobs
         stage('Archive APK') {
              steps {
                 archiveArtifacts artifacts: 'app/build/outputs/apk/debug/app-debug.apk', fingerprint: true
@@ -42,9 +60,9 @@ pipeline {
                 $SMTPServer = "smtp.gmail.com"
                 $SMTPPort = "587"
                 $Username = "tarakarohit@gmail.com"
-                $Password = "ohsr qmyt wmdx ewhr"  # Use your App Password here
+                $Password = "ohsr qmyt wmdx ewhr"
                 $Message = New-Object System.Net.Mail.MailMessage
-                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")  # ✅ Professional-looking "From" name
+                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")
                 $Message.To.Add("tarakarohit@gmail.com")
                 $Message.Subject = "✅ Jenkins Build Successful"
                 $Message.Body = "All tests passed. Build Successful!"
@@ -64,9 +82,9 @@ pipeline {
                 $SMTPServer = "smtp.gmail.com"
                 $SMTPPort = "587"
                 $Username = "tarakarohit@gmail.com"
-                $Password = "ohsr qmyt wmdx ewhr"  # Use your App Password here
+                $Password = "ohsr qmyt wmdx ewhr"
                 $Message = New-Object System.Net.Mail.MailMessage
-                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")  # ✅ Professional-looking "From" name
+                $Message.From = New-Object System.Net.Mail.MailAddress("tarakarohit@gmail.com", "Jenkins CI Server")
                 $Message.To.Add("tarakarohit@gmail.com")
                 $Message.Subject = "❌ Jenkins Build Failed"
                 $Message.Body = "Tests failed. Build Unsuccessful!"
